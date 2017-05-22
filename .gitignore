@@ -5,6 +5,8 @@
 !*.*
 # Unignore all dirs
 !*/
+# Unignore specific files
+!Makefile
 
 # General #
 

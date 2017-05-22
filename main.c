@@ -101,18 +101,18 @@ flush_UART_RX_buffer(void)
 	}
 }
 
-uint16_t
-getADC(uint16_t iter)
+uint32_t
+getADC(uint16_t iter, uint16_t div)
 {	
 	uint32_t ADCVal = 0;
-	for(uint16_t i = 0; i < iter; i++)
+	for(uint32_t i = 0; i < iter; i++)
 	{
 		ADCSRA |= _BV(ADSC);
 		loop_until_bit_is_clear(ADCSRA, ADSC);
 		ADCVal += ADCW;
 	}
 
-	return (uint16_t) (ADCVal/iter);
+	return (uint32_t) (ADCVal/div);
 }
 
 void
@@ -126,14 +126,15 @@ main (void)
 	ADCSRA |= _BV(ADPS0) | _BV(ADPS2); // Clock prescaler = 1/64
 	ADCSRA |= _BV(ADEN); // ADC Enable
 
-	uint16_t temp_coeff_zero = 544; // Temperature at 0°C
+	uint16_t temp_coeff_zero = 544; // ADC value at 0°C
 	uint8_t temp_coeff_dx = 50; // Unit of -0.01°C per ADC unit
-	// An simple way to calibrate: measure ADC values for ice and boiling water
-	// so temp_coeff_dx = value_on_ice - value_on_boiling_water
+	// Two-point calibration: measure ADC values V1, V2 on temperatures T1, T2 respectively
+	// temp_coeff_dx = -(T2 - T1)/(V2 - V1)
+	// temp_coeff_zero = -(V2*T1 - V1*T2)/(T2 - T1)
 
 	while(1)
 	{
-		uint16_t temp = (temp_coeff_zero - getADC(1000))*temp_coeff_dx/10;
+		uint16_t temp = (10*temp_coeff_zero - getADC(1000,100))*temp_coeff_dx/100;
 		uart_print("Temp: ");
 		uart_print_long_dec(temp, 3);
 		uart_print("°C\r\n");
