@@ -127,13 +127,13 @@ main (void)
 	ADCSRA |= _BV(ADEN); // ADC Enable
 
 	uint16_t temp_coeff_zero = 544; // Temperature at 0°C
-	float temp_coeff_dx = 5; // Unit of -0.1°C per ADC unit
-	// An simple way to calibrate: measure values for ice and boiling water
-	// so temp_coeff_dx = (value_on_ice - value_on_boiling_water)/10
+	uint8_t temp_coeff_dx = 50; // Unit of -0.01°C per ADC unit
+	// An simple way to calibrate: measure ADC values for ice and boiling water
+	// so temp_coeff_dx = value_on_ice - value_on_boiling_water
 
 	while(1)
 	{
-		uint16_t temp = (temp_coeff_zero - getADC(1000))*temp_coeff_dx;
+		uint16_t temp = (temp_coeff_zero - getADC(1000))*temp_coeff_dx/10;
 		uart_print("Temp: ");
 		uart_print_long_dec(temp, 3);
 		uart_print("°C\r\n");
